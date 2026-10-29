@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TutorTrack — прогресс учеников под контролем</title>
 <meta name="description" content="TutorTrack собирает данные об успеваемости ученика, визуализирует прогресс и подсказывает, когда переходить к новой теме. Меньше рутины — больше точных решений." />
+<meta property="og:title" content="TutorTrack — прогресс учеников под контролем" />
+<meta property="og:description" content="TutorTrack собирает данные об успеваемости ученика, визуализирует прогресс и подсказывает, когда переходить к новой теме. Меньше рутины — больше точных решений." />
+<meta property="og:image" content="https://raw.githubusercontent.com/dragDan367/gg/main/%D1%84%D0%BE%D1%82%D0%BE3.jpg" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <style>
   /* ---------- Базовые стили ---------- */
   :root {
@@ -25,7 +31,9 @@
     --max: 1120px;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
   section[id], footer[id] { scroll-margin-top: 96px; }
   body {
     margin: 0;
@@ -41,6 +49,15 @@
   h3 { font-size: 1.125rem; font-weight: 700; }
   p { margin: 0 0 1em; color: var(--ink-soft); }
   a { color: var(--brand); }
+  a:focus-visible,
+  button:focus-visible,
+  summary:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 3px;
+  }
   ul { padding-left: 1.15em; margin: 0 0 1em; color: var(--ink-soft); }
   li { margin-bottom: .4em; }
   .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
@@ -200,6 +217,31 @@
   .adv-list li { display: flex; gap: 12px; margin-bottom: 18px; color: var(--ink-soft); }
   .check { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: #027a48; display: grid; place-items: center; font-size: .75rem; font-weight: 800; margin-top: 2px; }
   .adv-list strong { color: var(--ink); display: block; }
+  .mastery-overview { display: flex; align-items: center; gap: 22px; }
+  .mastery-ring {
+    flex: 0 0 132px; width: 132px; aspect-ratio: 1;
+    display: grid; place-items: center; border-radius: 50%;
+    background: conic-gradient(var(--brand) 0 78%, #e4e7ec 78% 100%);
+  }
+  .mastery-ring-inner {
+    width: 102px; aspect-ratio: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; border-radius: 50%; background: #fff;
+  }
+  .mastery-ring-inner strong { font-size: 1.65rem; line-height: 1.2; color: var(--ink); }
+  .mastery-ring-inner span { font-size: .72rem; color: var(--ink-soft); }
+  .mastery-copy { display: grid; gap: 6px; }
+  .mastery-copy strong { font-size: 1rem; }
+  .mastery-copy > span:not(.pill) { font-size: .82rem; color: var(--ink-soft); }
+  .topic-heatmap { margin-top: 22px; }
+  .heatmap-title { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 12px; font-size: .82rem; font-weight: 700; }
+  .heatmap-title span { color: var(--ink-soft); font-size: .72rem; font-weight: 500; }
+  .heatmap-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .heatmap-topic { flex: 0 0 128px; overflow: hidden; color: var(--ink-soft); font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
+  .heatmap-cells { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .heatmap-cell { height: 15px; border-radius: 4px; background: #eef2ff; }
+  .heatmap-cell.mid { background: #c7d2fe; }
+  .heatmap-cell.high { background: #818cf8; }
+  .heatmap-cell.complete { background: var(--brand); }
 
   /* ---------- Отзывы ---------- */
   .quote { font-size: .98rem; color: var(--ink); }
@@ -256,7 +298,7 @@
     background: rgba(255,255,255,.12); color: #fff; font-size: .95rem; min-width: 260px;
   }
   .form-inline input::placeholder { color: rgba(255,255,255,.7); }
-  .form-inline input:focus { outline: 2px solid #fff; }
+  .form-inline input:focus-visible { outline-color: #fff; }
   .form-note { font-size: .8rem; opacity: .8; margin-top: 12px; }
 </style>
 </head>
@@ -407,24 +449,46 @@
       </ul>
     </div>
 
-    <!-- Визуальная идея: мини-график и рекомендация -->
+    <!-- Сводка успеваемости по ученику -->
     <div class="app-mock" aria-hidden="true">
-      <div class="app-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="app-title">Динамика усвоения</span></div>
+      <div class="app-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="app-title">Обзор успеваемости</span></div>
       <div class="app-body">
         <div class="student-row">
           <span class="student-name">Иван П. · геометрия</span>
           <span class="pill warn">Нужно повторить</span>
         </div>
-        <div class="bars">
-          <div class="bar muted" style="height:35%"><span>Т1</span></div>
-          <div class="bar muted" style="height:48%"><span>Т2</span></div>
-          <div class="bar" style="height:62%"><span>Т3</span></div>
-          <div class="bar" style="height:74%"><span>Т4</span></div>
-          <div class="bar muted" style="height:55%"><span>Т5</span></div>
+        <div class="mastery-overview">
+          <div class="mastery-ring">
+            <div class="mastery-ring-inner"><strong>78%</strong><span>усвоено</span></div>
+          </div>
+          <div class="mastery-copy">
+            <strong>Хорошая динамика</strong>
+            <span>Уверенно освоено 4 из 6 тем курса.</span>
+            <span class="pill warn">2 темы требуют внимания</span>
+          </div>
+        </div>
+        <div class="topic-heatmap">
+          <div class="heatmap-title">Усвоение по темам <span>последние занятия</span></div>
+          <div class="heatmap-row">
+            <span class="heatmap-topic">Углы и прямые</span>
+            <span class="heatmap-cells"><span class="heatmap-cell high"></span><span class="heatmap-cell complete"></span><span class="heatmap-cell complete"></span><span class="heatmap-cell complete"></span><span class="heatmap-cell complete"></span></span>
+          </div>
+          <div class="heatmap-row">
+            <span class="heatmap-topic">Треугольники</span>
+            <span class="heatmap-cells"><span class="heatmap-cell"></span><span class="heatmap-cell mid"></span><span class="heatmap-cell high"></span><span class="heatmap-cell complete"></span><span class="heatmap-cell complete"></span></span>
+          </div>
+          <div class="heatmap-row">
+            <span class="heatmap-topic">Теорема Пифагора</span>
+            <span class="heatmap-cells"><span class="heatmap-cell"></span><span class="heatmap-cell"></span><span class="heatmap-cell mid"></span><span class="heatmap-cell mid"></span><span class="heatmap-cell high"></span></span>
+          </div>
+          <div class="heatmap-row">
+            <span class="heatmap-topic">Подобие фигур</span>
+            <span class="heatmap-cells"><span class="heatmap-cell"></span><span class="heatmap-cell mid"></span><span class="heatmap-cell mid"></span><span class="heatmap-cell"></span><span class="heatmap-cell mid"></span></span>
+          </div>
         </div>
         <div class="rec">
           <span>💡</span>
-          <span>Тема «Подобие треугольников» усвоена на 55%. Рекомендуем закрепить перед новой темой.</span>
+          <span>Повторите тему «Подобие фигур», прежде чем переходить дальше.</span>
         </div>
       </div>
     </div>
