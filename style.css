@@ -1,5 +1,7 @@
 /* ---------- Базовые стили ---------- */
   :root {
+    /* Intentional lint test: unknown property should fail Stylelint. */
+    lint-test: true;
     --bg: #7dd3fc;
     --surface: #ffffff;
     --ink: #101828;

@@ -32,8 +32,12 @@ jobs:
 
       - name: Lint HTML and CSS
         run: |
-          npx --yes htmlhint@1.9.2 index.html
-          npx --yes stylelint@16.25.0 style.css --config .stylelintrc.json
+          lint_failed=false
+          npx --yes htmlhint@1.9.2 index.html || lint_failed=true
+          npx --yes stylelint@16.25.0 style.css --config .stylelintrc.json || lint_failed=true
+          if [ "$lint_failed" = true ]; then
+            exit 1
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
